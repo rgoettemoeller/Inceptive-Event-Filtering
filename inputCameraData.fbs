@@ -1,0 +1,14 @@
+namespace Camera.Data;
+
+struct dataPoint {
+    x:ushort;
+    y:ushort;
+    time:ulong;
+    polarity:ubyte;
+}
+
+table DataCollection {
+    collectedData:[dataPoint];
+}
+
+root_type DataCollection;
