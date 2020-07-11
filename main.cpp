@@ -6,9 +6,11 @@
 #include "FindTE.h"
 #include <time.h>
 #include "inputCameraData_generated.h"
+#include <thread>
   
 using namespace std; 
 using namespace Camera::Data;
+flatbuffers::FlatBufferBuilder builder;
 
 int main() 
 { 
@@ -25,9 +27,6 @@ int main()
     inceptiveEvents =  new (nothrow) values[sensorDim[0] * sensorDim[1]];
     trailingEvents =  new (nothrow) values[sensorDim[0] * sensorDim[1]];
 
-    dataPoint * dataArray;
-    dataArray = new (nothrow) dataPoint[sensorDim[0] * sensorDim[1]];
-
 //import data begin
     clock_t importBegin = clock();
 
@@ -43,6 +42,9 @@ int main()
     auto receivedInputData = GetDataCollection(theInputData);
     auto importDataVector = receivedInputData->collectedData();
 
+    dataPoint * totalDataPointsExport;
+    totalDataPointsExport = new (nothrow) dataPoint[importDataVector->size()];
+
     for(unsigned int i = 0; i < importDataVector->size(); i++)
     {
         fillTimeArray(&(valueArray[(importDataVector->Get(i)->x() - 1) * sensorDim[0] + (importDataVector->Get(i)->y() - 1)]), importDataVector->Get(i)->time(), importDataVector->Get(i)->polarity());
@@ -55,8 +57,10 @@ int main()
 
 //import data end
 
-
     clock_t findEvents = clock();
+
+    thread t1(convertOriginalData, importDataVector, totalDataPointsExport);
+    t1.join();
     for(int i = 0; i < (sensorDim[0] * sensorDim[1]); i++)
     {
         findIE(&inceptiveEvents[i], &valueArray[i], multiTriggerWindow);
@@ -88,8 +92,15 @@ int main()
 //import timer
     clock_t exportBegin = clock();
 
+    inceptiveEventsBuffer * inceptiveEventsArray;
+    inceptiveEventsArray = new (nothrow) inceptiveEventsBuffer[200000];
+    int inceptiveCounter = 0;
 
-    FILE *f = fopen("isIE.csv", "w");
+    trailingEventsBuffer * trailingEventsArray;
+    trailingEventsArray = new (nothrow) trailingEventsBuffer[200000];
+    int trailingCounter = 0;
+
+    //FILE *f = fopen("isIE.csv", "w");
     for(int i = 0; i < (sensorDim[0] * sensorDim[1]); i++)
     {
         for(int j = 0; j < 10; j++)
@@ -99,7 +110,10 @@ int main()
             if(inceptiveEvents[i].t[j] != 0)
             {
                 //printf("%d,%d,%llu\n",  ((i / sensorDim[0]) + 1), ((i % sensorDim[0]) + 1), inceptiveEvents[i].t[j]);
-                fprintf(f,"%d,%d,%llu,%d\n",  ((i / sensorDim[0]) + 1), ((i % sensorDim[0]) + 1), inceptiveEvents[i].t[j], inceptiveEvents[i].trailingNum[j]);
+                //fprintf(f,"%d,%d,%llu,%d\n",  ((i / sensorDim[0]) + 1), ((i % sensorDim[0]) + 1), inceptiveEvents[i].t[j], inceptiveEvents[i].trailingNum[j]);
+
+                inceptiveEventsArray[i] = inceptiveEventsBuffer(((i / sensorDim[0]) + 1), ((i % sensorDim[0]) + 1), inceptiveEvents[i].t[j], inceptiveEvents[i].trailingNum[j]);
+                inceptiveCounter++;
             }
             else
             {
@@ -108,9 +122,9 @@ int main()
             
         }
     }
-    fclose(f);
+    //fclose(f);
 
-    FILE *ft = fopen("isTE.csv", "w");
+    //FILE *ft = fopen("isTE.csv", "w");
     for(int i = 0; i < (sensorDim[0] * sensorDim[1]); i++)
     {
         for(int j = 0; j < 10; j++)
@@ -120,7 +134,9 @@ int main()
             if(trailingEvents[i].t[j] != 0)
             {
                 //printf("%d,%d,%llu\n",  ((i / sensorDim[0]) + 1), ((i % sensorDim[0]) + 1), trailingEvents[i].t[j]);
-                fprintf(f,"%d,%d,%llu\n",  ((i / sensorDim[0]) + 1), ((i % sensorDim[0]) + 1), trailingEvents[i].t[j]);
+                //fprintf(f,"%d,%d,%llu\n",  ((i / sensorDim[0]) + 1), ((i % sensorDim[0]) + 1), trailingEvents[i].t[j]);
+                trailingEventsArray[i] = trailingEventsBuffer(((i / sensorDim[0]) + 1), ((i % sensorDim[0]) + 1), trailingEvents[i].t[j]);
+                trailingCounter++;
             }
             else
             {
@@ -129,7 +145,25 @@ int main()
             
         }
     }
-    fclose(ft);
+    //fclose(ft);
+
+    auto totalInceptiveEvents = builder.CreateVectorOfStructs(inceptiveEventsArray, inceptiveCounter);
+    auto totalTrailingEvents = builder.CreateVectorOfStructs(trailingEventsArray, trailingCounter);
+    //auto totalDataPointsExport = builder.CreateVectorOfStructs(importDataVector, importDataVector->size());
+
+    // for(int i = 0; i < importDataVector->size(); i++){
+    //     totalDataPointsExport[i] = dataPoint(importDataVector->Get(i)->x(), importDataVector->Get(i)->y(), importDataVector->Get(i)->time(), importDataVector->Get(i)->polarity());
+    // }
+    //convertOriginalData(importDataVector, totalDataPointsExport);
+
+    //convertOriginalData( importDataVector, totalDataPointsExport );
+
+    auto messyDataExport = builder.CreateVectorOfStructs(totalDataPointsExport, importDataVector->size());
+
+    //dataPoint* totalDataPointsExport = &importDataVector[0];
+
+    auto totalMess = CreateDataCollection(builder, messyDataExport, totalInceptiveEvents, totalTrailingEvents);
+
 
     clock_t exportEnd = clock();
     double time_clock_spent_export = (double)(exportEnd - exportBegin) / CLOCKS_PER_SEC;

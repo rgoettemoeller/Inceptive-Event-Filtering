@@ -2,6 +2,10 @@
 #define DATASTRUCTURE_H_
 
 #include <stdint.h>
+#include "inputCameraData_generated.h"
+
+using namespace std;
+using namespace Camera::Data;
 
 
 struct values{
@@ -11,5 +15,7 @@ struct values{
 };
 
 extern void fillTimeArray(values *ValuesElement, unsigned long long timeValue, short p);
+
+extern void convertOriginalData(const flatbuffers::Vector<const Camera::Data::dataPoint*>* importDataVector, dataPoint *exportedData);
 
 #endif
