@@ -72,7 +72,6 @@ extern void findIE(values *inceptiveEvents, values *valueArray, int multiTrigger
     {
         if(positiveIndicies[i] == 1)
         {
-            //printf("%llu\n", positiveT[i]);
             inceptiveEvents->t[tIndex] = positiveT[i];
             tIndex++;
         }
@@ -120,7 +119,6 @@ extern void findIE(values *inceptiveEvents, values *valueArray, int multiTrigger
     {
         if(negativeIndicies[i] == 1)
         {
-            //printf("%llu\n", negativeT[i]);
             inceptiveEvents->t[tIndex] = negativeT[i];
             tIndex++;
         }

@@ -32,7 +32,7 @@ extern void findTE(values *trailingEvents, values *valueArray, int multiTriggerW
     uint8_t negativeIndicies[negativeIndex];
 
 
-// positive polarities
+// determines if an event is a trailing event and fills the positive array
     if(sizeof(positiveIndicies) != 0)
     {
         for(int i = 0; i < (sizeof(positiveIndicies) - 1); i++)
@@ -82,7 +82,6 @@ extern void findTE(values *trailingEvents, values *valueArray, int multiTriggerW
     {
         if(positiveIndicies[i] == 1)
         {
-            //printf("%llu\n", positiveT[i]);
             trailingEvents->t[tIndex] = positiveT[i];
             tIndex++;
         }
@@ -90,7 +89,7 @@ extern void findTE(values *trailingEvents, values *valueArray, int multiTriggerW
 
     //positive polarities
 
-    //negative polarities
+    //determines if a negative event is a trailing event and fills the struct accordingly
     if(sizeof(negativeIndicies) != 0)
     {
         for(int i = 0; i < (sizeof(negativeIndicies) - 1); i++)
@@ -140,7 +139,6 @@ extern void findTE(values *trailingEvents, values *valueArray, int multiTriggerW
     {
         if(negativeIndicies[i] == 1)
         {
-            //printf("%llu\n", negativeT[i]);
             trailingEvents->t[tIndex] = negativeT[i];
             tIndex++;
         }
