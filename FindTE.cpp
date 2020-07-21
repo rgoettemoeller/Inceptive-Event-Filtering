@@ -3,8 +3,6 @@
 
 extern void findTE(values *trailingEvents, values *valueArray, int multiTriggerWindow)
 {
-    uint8_t positiveP[10];
-    uint8_t negativeP[10];
     unsigned long long positiveT[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned long long negativeT[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     int positiveIndex = 0;
